@@ -36,13 +36,31 @@ class EmployeePage extends StatelessWidget {
                 child: FutureBuilder<List<Employee>>(
                   future: ApiService.fetchEmployees(),
                   builder: (context, snapshot) {
-                    // Loading State
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
+              // Loading State
+if (snapshot.connectionState == ConnectionState.waiting) {
+  return const Padding(
+    padding: EdgeInsets.symmetric(vertical: 40.0),
+    child: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: Colors.blue, // Warna spinner
+            strokeWidth: 3,     // Ketebalan garis spinner
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Memuat data karyawan...',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
                     // Error State
                     if (snapshot.hasError) {

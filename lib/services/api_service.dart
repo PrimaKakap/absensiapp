@@ -7,20 +7,20 @@ class ApiService {
 
   static Future<List<Employee>> fetchEmployees() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/employees'));
+      // timeout 30 second
+final response = await http
+    .get(Uri.parse('$baseUrl/employees'))
+    .timeout(const Duration(seconds: 30)); 
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        
         Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-        // Ambil array dari key 'data'
         List<dynamic> listData = jsonResponse['data'] ?? [];
-      return listData
-      .map((item) => Employee.fromJson(item as Map<String, dynamic>))
+
+        return listData
+            .map((item) => Employee.fromJson(item as Map<String, dynamic>))
             .toList();
-    
       } else {
-        throw Exception('Gagal mengambil data karyawan');
+        throw Exception('Gagal mengambil data karyawan (Status: ${response.statusCode})');
       }
     } catch (e) {
       throw Exception('Error koneksi API: $e');
