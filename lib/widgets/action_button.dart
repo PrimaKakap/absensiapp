@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../theme/app_colors.dart';
 
 class ActionButton extends StatelessWidget {
   final String assetName;
@@ -20,13 +21,16 @@ class ActionButton extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white,
+          color: AppColors.cardBackground, 
         ),
         child: SvgPicture.asset(
           'assets/icons/$assetName.svg',
           width: 22,
           height: 22,
-          colorFilter: ColorFilter.mode(Colors.blue.shade800, BlendMode.srcIn),
+          colorFilter: ColorFilter.mode(
+            AppColors.iconActive, 
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );

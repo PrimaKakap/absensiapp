@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/employee_page.dart';
+import 'pages/main_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'Employee page',
     theme: ThemeData(primarySwatch: Colors.blue),
-    home: const EmployeePage(),
+    home: const MainPage(),
     );
   }
 }

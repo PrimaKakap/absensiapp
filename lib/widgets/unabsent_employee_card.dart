@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/employee.dart';
-import '../pages/employee_detail_page.dart'; // Impor halaman detail
+import '../pages/employee_detail_page.dart';
+import '../theme/app_colors.dart'; 
 
 class AbsentEmployeesCard extends StatelessWidget {
   final List<Employee> absentList;
@@ -16,7 +17,7 @@ class AbsentEmployeesCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -27,7 +28,7 @@ class AbsentEmployeesCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -37,7 +38,6 @@ class AbsentEmployeesCard extends StatelessWidget {
               children: absentList.map((employee) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 16),
-                  // Bungkus item dengan GestureDetector agar bisa diklik
                   child: GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -63,7 +63,7 @@ class AbsentEmployeesCard extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey.shade700,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),

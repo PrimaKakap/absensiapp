@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/employee.dart';
 import '../widgets/action_button.dart';
 import '../widgets/detail_info_row.dart';
+import '../theme/app_colors.dart'; // Impor konstanta warna
 
 class EmployeeDetailPage extends StatelessWidget {
   final Employee employee;
@@ -10,16 +11,13 @@ class EmployeeDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definisi warna krem untuk bagian profil atas
-    const headerColor = Color.fromARGB(255, 255, 251, 242);
-
     return Scaffold(
-      backgroundColor: Colors.white, // Ubah Scaffold jadi putih murni
+      backgroundColor: AppColors.cardBackground, // Latar belakang utama putih
       appBar: AppBar(
-        backgroundColor: headerColor, // Menyesuaikan warna AppBar dengan header
+        backgroundColor: AppColors.headerBackground, // Warna krem header
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -28,7 +26,7 @@ class EmployeeDetailPage extends StatelessWidget {
           children: [
             // 1. Bagian Header Profil (Berwarna Krem)
             Container(
-              color: headerColor,
+              color: AppColors.headerBackground,
               width: double.infinity,
               padding: const EdgeInsets.only(bottom: 24, top: 10),
               child: Column(
@@ -41,13 +39,24 @@ class EmployeeDetailPage extends StatelessWidget {
                   Text(
                     employee.name,
                     maxLines: 2,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     employee.position,
                     maxLines: 2,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
