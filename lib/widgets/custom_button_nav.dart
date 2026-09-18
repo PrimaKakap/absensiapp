@@ -26,41 +26,49 @@ const CustomButtonNav({
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           // 1. Beranda
-          _buildNavItem(
+          Expanded(
+          child: _buildNavItem(
             index: 0,
             label: 'Beranda',
             assetName: 'home',
           ),
+          ),
 
           // 2. Karyawan
+          Expanded(child:
           _buildNavItem(
             index: 1,
             label: 'Karyawan',
             assetName: 'karyawan',
           ),
-
-          // 3. Pengajuan (Tombol Plus Tengah)
+          ),
+          // 3. Pengajuan 
+          Expanded(child:
           _buildNavItem(
             index: 2,
             label: 'Pengajuan',
             assetName: 'add',
             isCenterAction: true,
           ),
-
-          // 4. Inbox (Dengan Notification Badge)
+          ),
+          // 4. Inbox (Dengan Notification dot)
+          Expanded(child: 
           _buildNavItem(
             index: 3,
             label: 'Inbox',
             assetName: 'inbox',
             badgeCount: 2,
           ),
+          ),
 
-          // 5. Akun (Menggunakan Foto Profil Mini)
+          // 5. Akun 
+          Expanded(child: 
           _buildNavItem(
             index: 4,
             label: 'Akun',
             isProfile: true,
             photoUrl: 'https://i.pravatar.cc/100?img=12', // Nanti bisa diisi dynamic
+          ),
           ),
         ],
       ),

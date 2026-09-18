@@ -1,3 +1,4 @@
+import 'package:employeepage/pages/employee_filter_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/employee.dart';
@@ -19,6 +20,8 @@ class _EmployeePageState extends State<EmployeePage> {
   late Future<List<Employee>> _employeeFuture;
   List<Employee> _allEmployees = [];
   List<Employee> _filteredEmployees = [];
+  List<String> _selectedBranches = [];
+  List<String> _selectedPositions = [];
   String _searchQuery = '';
 
   @override
@@ -37,18 +40,53 @@ class _EmployeePageState extends State<EmployeePage> {
     });
   }
 
-  // Fungsi penyaringan berdasarkan kata kunci nama
-  void _filterEmployees(String query) {
+  // 1. Filter (Search + Cabang + Posisi)
+  void _applyFilter() {
     setState(() {
-      _searchQuery = query;
-      if (query.isEmpty) {
-        _filteredEmployees = _allEmployees;
-      } else {
-        _filteredEmployees = _allEmployees
-            .where((emp) => emp.name.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
+      _filteredEmployees = _allEmployees.where((emp) {
+        // Filter Nama
+        final matchesSearch = _searchQuery.isEmpty ||
+            emp.name.toLowerCase().contains(_searchQuery.toLowerCase());
+
+        // Filter Cabang
+        final matchesBranch = _selectedBranches.isEmpty ||
+            _selectedBranches.contains(emp.branch);
+
+        // Filter Posisi / Organisasi
+        final matchesPosition = _selectedPositions.isEmpty ||
+            _selectedPositions.contains(emp.position);
+
+        return matchesSearch && matchesBranch && matchesPosition; 
+      }).toList();
     });
+  }
+
+  // 2. Handler untuk Search Bar
+  void _filterEmployees(String query) {
+    _searchQuery = query;
+    _applyFilter();
+  }
+
+  // 3. Handler untuk Membuka Laman Filter
+  Future<void> _openFilterPage() async {
+    final result = await Navigator.push<FilterResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EmployeeFilterPage(
+          allEmployees: _allEmployees,
+          initialSelectedBranches: _selectedBranches,
+          initialSelectedPositions: _selectedPositions,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedBranches = result.selectedBranches;
+        _selectedPositions = result.selectedPositions;
+      });
+      _applyFilter(); // Panggil applyFilter agar UI langsung update!
+    }
   }
 
   @override
@@ -59,10 +97,11 @@ class _EmployeePageState extends State<EmployeePage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // 1. (Dynamic Total & Search Event)
+              // 1. Header & Search Bar
               EmployeeHeader(
                 totalEmployees: _filteredEmployees.length,
                 onSearchChanged: _filterEmployees,
+                onFilterTap: _openFilterPage,
               ),
 
               const SizedBox(height: 16),
@@ -120,9 +159,9 @@ class _EmployeePageState extends State<EmployeePage> {
                         padding: const EdgeInsets.all(24.0),
                         child: Center(
                           child: Text(
-                            _searchQuery.isEmpty 
+                            _searchQuery.isEmpty && _selectedBranches.isEmpty && _selectedPositions.isEmpty
                                 ? 'Belum ada data karyawan.' 
-                                : 'Karyawan "$_searchQuery" tidak ditemukan.',
+                                : 'Data karyawan tidak ditemukan.',
                             style: TextStyle(color: AppColors.textSecondary),
                           ),
                         ),

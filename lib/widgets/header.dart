@@ -4,9 +4,10 @@ import '../theme/app_colors.dart';
 class EmployeeHeader extends StatelessWidget {
   final int totalEmployees;
   final ValueChanged<String>? onSearchChanged;
+  final VoidCallback? onFilterTap;
 
   const EmployeeHeader({super.key, required this.totalEmployees,
-  this.onSearchChanged});
+  this.onSearchChanged, this.onFilterTap});
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +16,13 @@ class EmployeeHeader extends StatelessWidget {
         // Title & Icon Top Bar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
+          child: Stack(
+            alignment: Alignment.center,
             children: [
               const SizedBox(width: 48),
 
-              Expanded(
-                child: Center(
-                  child: RichText(
+              Center(
+                child: RichText(
                     text: TextSpan(
                       text: 'Employees ',
                       style: const TextStyle(
@@ -42,33 +43,35 @@ class EmployeeHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
 
               // Ikon di sebelah kanan
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.account_tree_outlined,
-                      color: AppColors.iconInactive,
-                    ),
+              Positioned(
+                right: 0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.account_tree_outlined,
+                        color: AppColors.iconInactive,
+                      ),
                     onPressed: () {},
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   IconButton(
                     icon: const Icon(
                       Icons.tune,
                       color: AppColors.iconInactive,
                     ),
-                    onPressed: () {},
+                    onPressed: onFilterTap,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
                 ],
               ),
+              )
             ],
           ),
         ),
