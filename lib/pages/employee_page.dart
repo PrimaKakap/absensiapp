@@ -52,7 +52,7 @@ class _EmployeePageState extends State<EmployeePage> {
         final matchesBranch = _selectedBranches.isEmpty ||
             _selectedBranches.contains(emp.branch);
 
-        // Filter Posisi / Organisasi
+        // Filter Posisi / Organisasi 
         final matchesPosition = _selectedPositions.isEmpty ||
             _selectedPositions.contains(emp.position);
 
@@ -85,7 +85,7 @@ class _EmployeePageState extends State<EmployeePage> {
         _selectedBranches = result.selectedBranches;
         _selectedPositions = result.selectedPositions;
       });
-      _applyFilter(); // Panggil applyFilter agar UI langsung update!
+      _applyFilter(); 
     }
   }
 

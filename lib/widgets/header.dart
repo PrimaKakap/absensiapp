@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart'; 
+import '../pages/organization_chart_page.dart';
 
 class EmployeeHeader extends StatelessWidget {
   final int totalEmployees;
@@ -55,7 +56,11 @@ class EmployeeHeader extends StatelessWidget {
                         Icons.account_tree_outlined,
                         color: AppColors.iconInactive,
                       ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const OrganizationChartPage(),
+                      ),
+                    );
+                    },
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),

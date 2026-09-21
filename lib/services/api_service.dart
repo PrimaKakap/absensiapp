@@ -9,16 +9,15 @@ class ApiService {
     try {
       // timeout 30 second
 final response = await http
-    .get(Uri.parse('$baseUrl/employees'))
-    .timeout(const Duration(seconds: 30)); 
+    .get(Uri.parse('$baseUrl/users'))
+    .timeout(const Duration(seconds: 15)); 
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-        List<dynamic> listData = jsonResponse['data'] ?? [];
+        final List<dynamic> body = jsonDecode(response.body);
 
-        return listData
-            .map((item) => Employee.fromJson(item as Map<String, dynamic>))
-            .toList();
+        return body.map((dynamic item) => Employee.fromJson(item)).toList();
+            // .map((item) => Employee.fromJson(item as Map<String, dynamic>))
+            // .toList();
       } else {
         throw Exception('Gagal mengambil data karyawan (Status: ${response.statusCode})');
       }
