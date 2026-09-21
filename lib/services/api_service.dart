@@ -9,15 +9,18 @@ class ApiService {
     try {
       // timeout 30 second
 final response = await http
-    .get(Uri.parse('$baseUrl/users'))
+    .get(Uri.parse('$baseUrl/employees'))
     .timeout(const Duration(seconds: 15)); 
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final List<dynamic> body = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+  final Map<String, dynamic> body = jsonDecode(response.body);
+  final List<dynamic> listData = body['data']; // Karena /employees dibungkus dalam "data": [...]
+  return listData.map((item) => Employee.fromJson(item)).toList();
 
-        return body.map((dynamic item) => Employee.fromJson(item)).toList();
-            // .map((item) => Employee.fromJson(item as Map<String, dynamic>))
-            // .toList();
+      // if (response.statusCode == 200 || response.statusCode == 201) {
+      //   final List<dynamic> body = jsonDecode(response.body);
+      //   return body.map((dynamic item) => Employee.fromJson(item)).toList();
+           
       } else {
         throw Exception('Gagal mengambil data karyawan (Status: ${response.statusCode})');
       }
