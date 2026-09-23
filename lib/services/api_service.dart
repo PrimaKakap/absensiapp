@@ -7,25 +7,56 @@ class ApiService {
 
   static Future<List<Employee>> fetchEmployees() async {
     try {
-      // timeout 30 second
-final response = await http
-    .get(Uri.parse('$baseUrl/employees'))
-    .timeout(const Duration(seconds: 15)); 
+      final response = await http
+          .get(Uri.parse('$baseUrl/employees'))
+          .timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-  final Map<String, dynamic> body = jsonDecode(response.body);
-  final List<dynamic> listData = body['data']; // Karena /employees dibungkus dalam "data": [...]
-  return listData.map((item) => Employee.fromJson(item)).toList();
-
-      // if (response.statusCode == 200 || response.statusCode == 201) {
-      //   final List<dynamic> body = jsonDecode(response.body);
-      //   return body.map((dynamic item) => Employee.fromJson(item)).toList();
-           
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        final List<dynamic> listData = body['data'];
+        return listData.map((item) => Employee.fromJson(item)).toList();
       } else {
         throw Exception('Gagal mengambil data karyawan (Status: ${response.statusCode})');
       }
     } catch (e) {
       throw Exception('Error koneksi API: $e');
+    }
+  }
+
+  /// Method baru untuk Mengirim Payload Absensi ke NestJS
+  static Future<Map<String, dynamic>> submitAttendance({
+    required String employeeId,
+    required double latitude,
+    required double longitude,
+    required List<double> faceEmbedding,
+    required String type, // 'CLOCK_IN' atau 'CLOCK_OUT'
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/attendance'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'employee_id': employeeId,
+              'latitude': latitude,
+              'longitude': longitude,
+              'type': type,
+              'face_embedding': faceEmbedding, // Array Vektor 128-D
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Gagal melakukan absensi');
+      }
+    } catch (e) {
+      throw Exception('Gagal menghubungi server absensi: $e');
     }
   }
 }

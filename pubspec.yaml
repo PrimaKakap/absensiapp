@@ -36,6 +36,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: 2.3.0
   http: ^1.6.0
+  camera: ^0.11.0+2                      # Akses stream kamera
+  geolocator: ^13.0.1                    # Ambil GPS Lat/Lon & Anti Fake-GPS
+  google_mlkit_face_detection: ^0.12.0   # ML Kit Face Detection & Active Liveness (Kedip)
+  tflite_flutter: ^0.12.1     
+  image: ^4.2.0           # Runtime untuk MobileFaceNet / Anti-Spoofing model
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +95,8 @@ flutter:
   # see https://flutter.dev/to/font-from-package
   assets:
     - assets/icons/
+    - assets/models/
+    - assets/models/mobilefacenet.tflite
+    - assets/models/face_antispoof.tflite
+
+  
