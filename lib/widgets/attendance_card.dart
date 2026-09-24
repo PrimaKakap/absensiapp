@@ -1,6 +1,7 @@
 import 'package:employeepage/pages/attendance_camera_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 
 class AttendanceCard extends StatelessWidget {
@@ -8,10 +9,12 @@ class AttendanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tanggal real-time Bahasa Indonesia (misal: "Kam, 24 Sep 2026")
+    final String todayFormatted = DateFormat('EEE, d MMM yyyy', 'id_ID').format(DateTime.now());
+
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: const BoxDecoration(
-        // Background disesuaikan menjadi putih sesuai revisi desain
         color: AppColors.cardBackground,
       ),
       child: Column(
@@ -54,10 +57,10 @@ class AttendanceCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // Tanggal
-              const Text(
-                'Sel, 22 Sep 2026',
-                style: TextStyle(
+              // Tanggal Real-Time
+              Text(
+                todayFormatted,
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -129,8 +132,14 @@ class AttendanceCard extends StatelessWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const AttendanceCameraPage(attendanceType: 'CLOCK_IN',),),);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AttendanceCameraPage(
+                            attendanceType: 'CLOCK_IN',
+                          ),
+                        ),
+                      );
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -167,8 +176,14 @@ class AttendanceCard extends StatelessWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const AttendanceCameraPage(attendanceType: 'CLOCK_OUT',),),);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AttendanceCameraPage(
+                            attendanceType: 'CLOCK_OUT',
+                          ),
+                        ),
+                      );
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,

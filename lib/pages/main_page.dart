@@ -18,7 +18,7 @@ class _MainPageState extends State<MainPage> {
   Widget _buildHomePage() {
     return Column(
       children: [
-        // Widget Header Absensi terpisah dari lib/widgets/attendance_card.dart
+        // Widget Header Absensi 
         const AttendanceCard(),
 
         // Area Konten Putih di bawahnya
