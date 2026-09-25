@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+// import 'package:http/http.dart';
 import '../theme/app_colors.dart';
 import '../services/location_service.dart';
 import '../services/ml_service.dart';
@@ -158,10 +159,11 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
       final position = await LocationService.getCurrentLocation();
 
       if (!mounted) return;
-
+//output post
       setState(() => _statusMessage = 'Mengirim Data Absensi...');
+      final savedEmployeeId = await ApiService.getSavedEmployeeId();
       final response = await ApiService.submitAttendance(
-        employeeId: 'e29bb03b-825d-41cb-a6c3-493d63b1cb00',
+        employeeId: savedEmployeeId,
         latitude: position.latitude,
         longitude: position.longitude,
         faceEmbedding: faceEmbedding,

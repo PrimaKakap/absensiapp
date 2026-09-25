@@ -42,6 +42,7 @@ dependencies:
   tflite_flutter: ^0.12.1     
   image: ^4.2.0           # Runtime untuk MobileFaceNet / Anti-Spoofing model
   intl: ^0.20.3
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
