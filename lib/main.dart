@@ -4,7 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/login_page.dart';
 // import 'pages/attendance_camera_page.dart';
-import 'pages/employee_page.dart';
+import 'pages/main_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'Absensi Karyawan',
     theme: ThemeData(primarySwatch: Colors.blue),
-    home: isLoggedIn ? const EmployeePage() : const LoginPage(),
+    home: isLoggedIn ? const MainPage() : const LoginPage(),
     );
   }
 }

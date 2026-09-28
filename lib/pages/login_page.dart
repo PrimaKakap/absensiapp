@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/api_service.dart';
-import 'employee_page.dart';
+import 'main_page.dart';
 
 class LoginPage extends StatefulWidget{
 const LoginPage({super.key});
@@ -14,6 +14,30 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+
+// Function untuk Bypass Login---------------------------------
+  Future<void> _handleBypassLogin() async {
+    setState(() => _isLoading = true);
+    
+    // Simpan session dummy secara lokal
+    await ApiService.loginBypass();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Masuk dalam Mode Pengembang (Dummy Session)'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+
+    // Langsung pindah ke Beranda Absensi
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const MainPage()), // Sesuaikan nama class berandamu
+    );
+  }
+  //-------------------------------------------------------
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -42,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
       // Pindah langsung ke Halaman Beranda Absensi & Hapus LoginPage dari tumpukan navigasi
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const EmployeePage()), // Sesuaikan nama class beranda
+        MaterialPageRoute(builder: (context) => const MainPage()), // Sesuaikan nama class beranda
       );
     } catch (e) {
       if (!mounted) return;
@@ -162,6 +186,26 @@ class _LoginPageState extends State<LoginPage> {
                             color: Colors.white,
                           ),
                         ),
+                      ),
+                const SizedBox(height: 12),
+                // TOMBOL BYPASS SEMENTARA
+                OutlinedButton(
+                  onPressed: _isLoading ? null : _handleBypassLogin,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.accentOrange, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Masuk Sebagai Mode Pengembang (Bypass)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accentOrange,
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'employee_page.dart';
 import '../widgets/custom_button_nav.dart';
 import '../widgets/attendance_card.dart';
 import '../theme/app_colors.dart';
+import 'account_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -12,7 +13,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _currentIndex = 1; // Default di Tab 'Karyawan'
+  int _currentIndex = 0; // Default di Tab 'Karyawan'
 
   // Helper tampilan untuk Halaman Beranda
   Widget _buildHomePage() {
@@ -43,7 +44,7 @@ class _MainPageState extends State<MainPage> {
       const EmployeePage(),
       const Center(child: Text('Halaman Pengajuan')),
       const Center(child: Text('Halaman Inbox')),
-      const Center(child: Text('Halaman Akun')),
+      const AccountPage(),
     ];
 
     return Scaffold(

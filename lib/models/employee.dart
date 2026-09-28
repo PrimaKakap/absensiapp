@@ -10,6 +10,9 @@ class Employee {
   final String birthDate;
   final String photoUrl;
 
+  final String attendanceStatus; // 'PRESENT', 'LATE', 'LEAVE', 'ABSENT'
+  final int latenessMinutes;
+
   Employee({
     required this.id,
     required this.name,
@@ -21,24 +24,42 @@ class Employee {
     required this.joinDate,
     required this.birthDate,
     required this.photoUrl,
+    this.attendanceStatus = 'ABSENT',
+    this.latenessMinutes = 0,
   });
 
   factory Employee.fromJson(Map<String, dynamic> json) {
-    // 1. Tangani hierarki root (apakah dari /employees atau dari /users)
+    // 1. Ekstraksi Objek Utama (Root dari /employees atau /users)
     final empObj = (json['employee'] as Map<String, dynamic>?) ?? json;
     final userObj = (json['user'] as Map<String, dynamic>?) ?? json;
 
-    // Objek Profile (bisa di root, di dalam employee, atau di dalam user)
+    // Objek Profile (dari employeeProfile atau profile)
     final profileObj = (json['employeeProfile'] ??
         empObj['employeeProfile'] ??
         userObj['employeeProfile']) as Map<String, dynamic>?;
 
-    // Objek Branch, Department, dan Position
+    // Objek Relasi Organisasi & Posisi
     final branchObj = empObj['branch'] as Map<String, dynamic>?;
     final deptObj = empObj['department'] as Map<String, dynamic>?;
     final posObj = empObj['position'] as Map<String, dynamic>?;
 
-    // 2. Ekstraksi Nama
+    // 2. Ekstraksi Data Presensi (dari array attendances jika ada)
+    String extractedStatus = 'ABSENT';
+    int extractedLateness = 0;
+
+    final attendancesList = (json['attendances'] ??
+        empObj['attendances'] ??
+        userObj['attendances']) as List<dynamic>?;
+
+    if (attendancesList != null && attendancesList.isNotEmpty) {
+      final latestAttendance = attendancesList.first as Map<String, dynamic>;
+      extractedStatus = latestAttendance['status'] ?? 'PRESENT';
+      extractedLateness = latestAttendance['latenessMinutes'] ??
+          latestAttendance['lateness_minutes'] ??
+          0;
+    }
+
+    // 3. Ekstraksi Nama (Prioritas: profile.fullName -> profile.namaLengkap -> user.username -> employeeNumber)
     String extractedName = 'No data (nama)';
     if (profileObj != null &&
         profileObj['fullName'] != null &&
@@ -55,31 +76,31 @@ class Employee {
       extractedName = empObj['employeeNumber'];
     }
 
-    // 3. Ekstraksi Email
+    // 4. Ekstraksi Email
     String extractedEmail = userObj['email'] ??
         userObj['workEmail'] ??
         profileObj?['personalEmail'] ??
         profileObj?['emailPribadi'] ??
         'No data (email)';
 
-    // 4. Ekstraksi No HP
+    // 5. Ekstraksi Nomor HP
     String extractedPhone = profileObj?['phoneNumber'] ??
         profileObj?['noHp'] ??
         'No data (no hp)';
 
-    // 5. Ekstraksi Tanggal Lahir
+    // 6. Ekstraksi Tanggal Lahir
     String extractedBirthDate = profileObj?['birthDate'] ??
         profileObj?['tanggalLahir'] ??
         'No data (tanggal lahir)';
 
-    // 6. Ekstraksi Cabang
+    // 7. Ekstraksi Cabang
     String extractedBranch = 'No data (cabang)';
     if (branchObj != null) {
       extractedBranch =
           branchObj['branchName'] ?? branchObj['namaCabang'] ?? 'No data (cabang)';
     }
 
-    // 7. Ekstraksi Departemen / Organisasi
+    // 8. Ekstraksi Departemen / Organisasi
     String extractedDept = 'No data (departemen)';
     if (deptObj != null) {
       extractedDept = deptObj['departmentName'] ??
@@ -87,7 +108,7 @@ class Employee {
           'No data (departemen)';
     }
 
-    // 8. Ekstraksi Posisi / Jabatan
+    // 9. Ekstraksi Jabatan / Posisi
     String extractedPosition = 'No data (posisi)';
     if (posObj != null && posObj['positionName'] != null) {
       extractedPosition = posObj['positionName'];
@@ -98,7 +119,7 @@ class Employee {
     }
 
     return Employee(
-      id: json['id'] ?? '',
+      id: json['id'] ?? empObj['id'] ?? '',
       name: extractedName,
       email: extractedEmail,
       phone: extractedPhone,
@@ -111,6 +132,8 @@ class Employee {
           'No data (tanggal join)',
       photoUrl:
           'https://i.pravatar.cc/300?img=${(json['id'] ?? '').hashCode.abs() % 70}',
+      attendanceStatus: extractedStatus,
+      latenessMinutes: extractedLateness,
     );
   }
 }
