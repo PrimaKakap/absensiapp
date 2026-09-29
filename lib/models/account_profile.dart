@@ -1,4 +1,4 @@
-class EmployeeProfileDetail {
+class AccountProfile {
   final String employeeId;
   final String employeeNumber;
   final String fullName;
@@ -12,7 +12,7 @@ class EmployeeProfileDetail {
   final String residentialAddress;
   final String employmentStatus;
 
-  EmployeeProfileDetail({
+  AccountProfile({
     required this.employeeId,
     required this.employeeNumber,
     required this.fullName,
@@ -27,7 +27,7 @@ class EmployeeProfileDetail {
     required this.employmentStatus,
   });
 
-  factory EmployeeProfileDetail.fromJson(Map<String, dynamic> json) {
+  factory AccountProfile.fromJson(Map<String, dynamic> json) {
     final user = json['user'] ?? {};
     final profile = user['employeeProfile'] ?? {};
     final position = json['position'] ?? {};
@@ -35,7 +35,7 @@ class EmployeeProfileDetail {
     final branch = json['branch'] ?? {};
     final company = json['company'] ?? {};
 
-    return EmployeeProfileDetail(
+    return AccountProfile(
       employeeId: json['id'] ?? '',
       employeeNumber: json['employeeNumber'] ?? '-',
       fullName: profile['fullName'] ?? 'Nama Karyawan',
