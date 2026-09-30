@@ -1,16 +1,35 @@
-import 'package:employeepage/pages/attendance_camera_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
+import '../models/attendance_model.dart';
 
 class AttendanceCard extends StatelessWidget {
-  const AttendanceCard({super.key});
+  final AttendanceModel? attendanceData;
+  final VoidCallback onClockInPressed;
+
+  const AttendanceCard({
+    super.key,
+    this.attendanceData,
+    required this.onClockInPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     // Tanggal real-time Bahasa Indonesia (misal: "Kam, 24 Sep 2026")
     final String todayFormatted = DateFormat('EEE, d MMM yyyy', 'id_ID').format(DateTime.now());
+
+    // Pengecekan status absensi dari data backend
+    final bool isClockedIn = attendanceData?.clockInTime != null;
+    final bool isClockedOut = attendanceData?.clockOutTime != null;
+
+    // Formatting Jam Clock In & Clock Out dari Backend
+    final String clockInTimeStr = isClockedIn
+        ? DateFormat('HH.mm').format(attendanceData!.clockInTime)
+        : '--.--';
+    final String clockOutTimeStr = isClockedOut
+        ? DateFormat('HH.mm').format(attendanceData!.clockOutTime!)
+        : '--.--';
 
     return Container(
       padding: const EdgeInsets.all(20.0),
@@ -131,16 +150,7 @@ class AttendanceCard extends StatelessWidget {
                 // Action Clock In
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AttendanceCameraPage(
-                            attendanceType: 'CLOCK_IN',
-                          ),
-                        ),
-                      );
-                    },
+                    onTap: isClockedIn ? null : onClockInPressed, // Mati jika sudah Clock In
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -148,18 +158,18 @@ class AttendanceCard extends StatelessWidget {
                           'assets/icons/clock_in.svg',
                           height: 20,
                           width: 20,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.clockInBlue,
+                          colorFilter: ColorFilter.mode(
+                            isClockedIn ? Colors.grey : AppColors.clockInBlue,
                             BlendMode.srcIn,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Clock In',
+                        Text(
+                          isClockedIn ? clockInTimeStr : 'Clock In',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: AppColors.textPrimary,
+                            color: isClockedIn ? AppColors.textSecondary : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -175,16 +185,7 @@ class AttendanceCard extends StatelessWidget {
                 // Action Clock Out
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AttendanceCameraPage(
-                            attendanceType: 'CLOCK_OUT',
-                          ),
-                        ),
-                      );
-                    },
+                    onTap: (!isClockedIn || isClockedOut) ? null : onClockInPressed, // Aktif HANYA jika sudah Clock In & belum Clock Out
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -192,18 +193,18 @@ class AttendanceCard extends StatelessWidget {
                           'assets/icons/clock_out.svg',
                           height: 20,
                           width: 20,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.accentOrange,
+                          colorFilter: ColorFilter.mode(
+                            (!isClockedIn || isClockedOut) ? Colors.grey : AppColors.accentOrange,
                             BlendMode.srcIn,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Clock Out',
+                        Text(
+                          isClockedOut ? clockOutTimeStr : 'Clock Out',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: AppColors.textPrimary,
+                            color: (!isClockedIn || isClockedOut) ? AppColors.textSecondary : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -215,12 +216,16 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 4. Keterangan Status Absensi
+          // 4. Keterangan Status Absensi Dinamis
           Center(
             child: Text(
-              'Anda telah berhasil clock in pada pukul 08.17',
-              style: TextStyle(
-                color: AppColors.textSecondary,
+              isClockedOut
+                  ? 'Anda telah selesai bekerja dan clock out pada pukul $clockOutTimeStr'
+                  : isClockedIn
+                      ? 'Anda telah berhasil clock in pada pukul $clockInTimeStr'
+                      : 'Anda belum melakukan clock in hari ini',
+              style: const TextStyle(
+                color: AppColors.iconInactive,
                 fontSize: 12,
               ),
             ),

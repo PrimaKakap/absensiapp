@@ -38,16 +38,20 @@ class _EmployeePageState extends State<EmployeePage> {
       setState(() {
         _allEmployees = data;
 
-        // 1. Kelompokkan Karyawan Hadir (PRESENT, LATE, LEAVE)
+        // Kelompokkan Karyawan Hadir (Termasuk CLOCK_IN dan IN)
         _presentEmployees = data.where((emp) {
           final status = emp.attendanceStatus.toUpperCase();
-          return status == 'PRESENT' || status == 'LATE' || status == 'LEAVE';
+          return status == 'PRESENT' || 
+                 status == 'LATE' || 
+                 status == 'LEAVE' || 
+                 status == 'CLOCK_IN' || 
+                 status == 'IN';
         }).toList();
 
-        // 2. Kelompokkan Karyawan Tidak Hadir (ABSENT)
+        // Kelompokkan Karyawan Tidak Hadir (ABSENT)
         _absentEmployees = data.where((emp) {
           final status = emp.attendanceStatus.toUpperCase();
-          return status == 'ABSENT';
+          return status == 'ABSENT' || status == 'NOT_PRESENT' || status.isEmpty;
         }).toList();
 
         _applyFilter();
@@ -112,6 +116,8 @@ class _EmployeePageState extends State<EmployeePage> {
 
     switch (status.toUpperCase()) {
       case 'PRESENT':
+      case 'CLOCK_IN':
+      case 'IN':
         color = Colors.green;
         label = 'Hadir';
         break;
@@ -120,6 +126,8 @@ class _EmployeePageState extends State<EmployeePage> {
         label = lateness > 0 ? 'Terlambat $lateness m' : 'Terlambat';
         break;
       case 'LEAVE':
+      case 'CLOCK_OUT':
+      case 'OUT':
         color = Colors.blue;
         label = 'Clock Out';
         break;
@@ -131,7 +139,7 @@ class _EmployeePageState extends State<EmployeePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color, width: 0.8),
       ),
