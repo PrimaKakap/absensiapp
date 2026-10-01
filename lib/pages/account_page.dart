@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../models/account_profile.dart';
 import 'login_page.dart';
+import 'change_password_page.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -208,15 +209,19 @@ class _AccountPageState extends State<AccountPage> {
                         child: Column(
                           children: [
                             ListTile(
-                              leading: const Icon(Icons.lock_reset_rounded, color: AppColors.textPrimary),
-                              title: const Text('Ubah Kata Sandi'),
-                              trailing: const Icon(Icons.chevron_right_rounded),
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Fitur Ubah Password segera hadir.')),
-                                );
-                              },
-                            ),
+                            leading: const Icon(Icons.lock_reset_rounded, color: AppColors.textPrimary),
+                            title: const Text('Ubah Kata Sandi'),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () {
+                              // Buka Halaman Ubah Kata Sandi
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ChangePasswordPage(),
+                                ),
+                              );
+                            },
+                          ),
                             const Divider(height: 1),
                             ListTile(
                               leading: const Icon(Icons.verified_user_outlined, color: AppColors.textPrimary),

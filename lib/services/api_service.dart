@@ -9,6 +9,18 @@ import '../models/attendance_model.dart';
 class ApiService {
   static const String baseUrl = 'http://192.168.1.149:5000/api/v1';
 
+  /// Helper Ambil Employee ID Tersimpan
+  static Future<String> getSavedEmployeeId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('employeeId') ?? '';
+  }
+
+  /// Helper Ambil Bearer Token
+  static Future<String?> getSavedToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
   /// Service Bypass Login Sementara
   static Future<void> loginBypass() async {
     final prefs = await SharedPreferences.getInstance();
@@ -43,7 +55,6 @@ class ApiService {
 
         final String token = (responseData['accessToken'] ?? responseData['token'] ?? '').toString();
         
-        // Cetak Token ke Debug Console VS Code agar bisa dikonfirmasi
         if (kDebugMode) {
           debugPrint('===> JWT Token Berhasil Diterima: $token');
         }
@@ -53,10 +64,13 @@ class ApiService {
         final employee = data['employee'] ?? user['employee'] ?? {};
         final profile = user['employeeProfile'] ?? employee['employeeProfile'] ?? {};
 
-        // Ekstraksi Employee ID dari berbagai kemungkinan posisi JSON
         final String employeeId = (employee['id'] ??
-            data['employeeId'] ??
-            user['employeeId'] ??
+          employee['employee_id'] ??
+          data['employeeId'] ??
+          data['employee_id'] ??
+          user['employeeId'] ??
+          user['employee_id'] ??
+          user['id'] ??
             '').toString();
 
         final String fullName = (profile['fullName'] ??
@@ -89,6 +103,38 @@ class ApiService {
     }
   }
 
+/// Method Ubah Password
+static Future<bool> changePassword({
+  required String oldPassword,
+  required String newPassword,
+}) async {
+  try {
+    final token = await getSavedToken();
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/change-password'), 
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else {
+      final Map<String, dynamic> body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Gagal mengubah kata sandi');
+    }
+  } catch (e) {
+    throw Exception('Error: ${e.toString().replaceAll('Exception: ', '')}');
+  }
+}
+
+  /// Fetch Absensi Hari Ini untuk User Logged In (Single Object)
   static Future<AttendanceModel?> getTodayAttendance(String token) async {
     final url = Uri.parse('$baseUrl/attendances/today');
 
@@ -97,41 +143,50 @@ class ApiService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
         },
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
-        
-        // Menangani wrapper 'data' khas NestJS
         final data = body['data'] ?? body;
 
-        // Jika belum absensi hari ini, backend mungkin return null / data kosong
         if (data == null) return null;
-
         return AttendanceModel.fromJson(data);
-      } else if (response.statusCode == 404) {
-        // Anggap status 404 sebagai "belum clock in hari ini"
-        return null;
       } else {
-        throw Exception('Gagal mengambil data absensi: ${response.statusCode}');
+        return null;
       }
     } catch (e) {
-      rethrow;
+      debugPrint("Error getTodayAttendance: $e");
+      return null;
     }
   }
 
-  /// Ambil Employee ID tersimpan
-  static Future<String> getSavedEmployeeId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('employeeId') ?? 'e29bb03b-825d-41cb-a6c3-493d63b1cb00';
-  }
+  /// Fetch Seluruh Absensi Hari Ini Karyawan (List Object)
+  static Future<List<AttendanceModel>> getAllTodayAttendances(String token) async {
+    final url = Uri.parse('$baseUrl/attendances/today/all');
 
-  /// Ambil Bearer Token
-  static Future<String?> getSavedToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final List data = body['data'] ?? body;
+
+        return data.map((e) => AttendanceModel.fromJson(e)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Error getAllTodayAttendances: $e");
+      return [];
+    }
   }
 
   /// Logout
@@ -168,27 +223,34 @@ class ApiService {
   /// Fetch detail profil karyawan aktif
   static Future<AccountProfile> fetchEmployeeDetail(String employeeId) async {
     try {
-      final token = await getSavedToken();
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-      };
+ String activeId = employeeId;
+    if (activeId.isEmpty) {
+      activeId = await getSavedEmployeeId();
+    }
 
-      final response = await http
-          .get(Uri.parse('$baseUrl/employees/$employeeId'), headers: headers)
-          .timeout(const Duration(seconds: 15));
+    final token = await getSavedToken();
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> body = jsonDecode(response.body);
-        final data = body['data'] ?? body;
-        return AccountProfile.fromJson(data);
-      } else {
-        return _getDummyProfileDetail();
-      }
-    } catch (e) {
+    final response = await http
+        .get(Uri.parse('$baseUrl/employees/$activeId'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> body = jsonDecode(response.body);
+      final data = body['data'] ?? body;
+      return AccountProfile.fromJson(data);
+    } else {
+      debugPrint('Fetch profile failed status: ${response.statusCode}');
       return _getDummyProfileDetail();
     }
+  } catch (e) {
+    debugPrint('Fetch profile error: $e');
+    return _getDummyProfileDetail();
   }
+}
 
   /// Fallback dummy profil
   static AccountProfile _getDummyProfileDetail() {
@@ -244,7 +306,6 @@ class ApiService {
         }
       };
 
-      // Panggilan HTTP tunggal header Bearer Token 
       final response = await http
           .post(
             Uri.parse('$baseUrl/attendances'),
