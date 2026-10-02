@@ -1,5 +1,6 @@
+import 'package:employeepage/widgets/request_type_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'employee_page.dart';
 import '../widgets/custom_button_nav.dart';
 import '../widgets/attendance_card.dart';
@@ -17,16 +18,25 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _currentIndex = 0; // Default di Tab 'Karyawan'
+  int _currentIndex = 0; // Default di Tab 'Beranda'
 
-  // Menyimpan state absensi today
+  // Variable menyimpan nama user & state absensi today
+  String _userName = 'User';
   AttendanceModel? _todayAttendance;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _fetchTodayAttendance();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('fullName') ?? 'User';
+    });
   }
 
   Future<void> _fetchTodayAttendance() async {
@@ -37,7 +47,7 @@ class _MainPageState extends State<MainPage> {
     try {
       // Ambil token tersimpan dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('access_token') ?? '';
+      final token = prefs.getString('access_token') ?? prefs.getString('token') ?? '';
 
       if (token.isNotEmpty) {
         final data = await ApiService.getTodayAttendance(token);
@@ -58,7 +68,6 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  //Fungsi handler saat tombol Clock In/Out ditekan
   Future<void> _handleClockIn() async {
     final String type = _todayAttendance?.clockInTime == null ? 'CLOCK_IN' : 'CLOCK_OUT';
     final result = await Navigator.push(
@@ -70,7 +79,7 @@ class _MainPageState extends State<MainPage> {
     );
 
     if (result == true) {
-      await _fetchTodayAttendance(); // Re-fetch data terbaru dari backend
+      await _fetchTodayAttendance();
     }
   }
 
@@ -83,9 +92,9 @@ class _MainPageState extends State<MainPage> {
             ? const Padding(
                 padding: EdgeInsets.all(24.0),
                 child: CircularProgressIndicator(),
-              ): 
-    
-              AttendanceCard(  
+              )
+            : AttendanceCard(
+                userName: _userName, // 2. Teruskan _userName ke AttendanceCard
                 attendanceData: _todayAttendance,
                 onClockInPressed: _handleClockIn,
               ),
@@ -124,9 +133,13 @@ class _MainPageState extends State<MainPage> {
         child: CustomButtonNav(
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
+            if (index == 2) {
+              RequestTypeSheet.show(context);
+            } else {
+              setState(() {
+                _currentIndex = index;
+              });
+            }
           },
         ),
       ),

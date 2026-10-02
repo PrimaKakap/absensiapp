@@ -7,22 +7,22 @@ import '../models/attendance_model.dart';
 class AttendanceCard extends StatelessWidget {
   final AttendanceModel? attendanceData;
   final VoidCallback onClockInPressed;
+  final String userName;
 
   const AttendanceCard({
     super.key,
     this.attendanceData,
     required this.onClockInPressed,
+    this.userName = 'User',
   });
 
   @override
   Widget build(BuildContext context) {
-    // Tanggal real-time Bahasa Indonesia (misal: "Kam, 24 Sep 2026")
+    // Tanggal real-time
     final String todayFormatted = DateFormat('EEE, d MMM yyyy', 'id_ID').format(DateTime.now());
-
     // Pengecekan status absensi dari data backend
     final bool isClockedIn = attendanceData?.clockInTime != null;
     final bool isClockedOut = attendanceData?.clockOutTime != null;
-
     // Formatting Jam Clock In & Clock Out dari Backend
     final String clockInTimeStr = isClockedIn
         ? DateFormat('HH.mm').format(attendanceData!.clockInTime)
@@ -64,9 +64,9 @@ class AttendanceCard extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
-                      const Text(
-                        'User',
-                        style: TextStyle(
+                      Text(
+                        'UserName',
+                        style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -137,7 +137,7 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 3. Tombol Clock In & Clock Out
+          // Tombol Clock In & Clock Out
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
