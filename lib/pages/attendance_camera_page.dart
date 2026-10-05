@@ -159,7 +159,7 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
       final position = await LocationService.getCurrentLocation();
 
       if (!mounted) return;
-//output post
+
       setState(() => _statusMessage = 'Mengirim Data Absensi...');
       final savedEmployeeId = await ApiService.getSavedEmployeeId();
       final response = await ApiService.submitAttendance(

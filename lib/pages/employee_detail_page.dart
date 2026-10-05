@@ -24,7 +24,6 @@ class EmployeeDetailPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Bagian Header Profil (Berwarna Krem)
             Container(
               color: AppColors.headerBackground,
               width: double.infinity,
@@ -73,7 +72,6 @@ class EmployeeDetailPage extends StatelessWidget {
               ),
             ),
 
-            // 2. Bagian Detail Informasi 
             DetailInfoRow(label: 'Cabang', value: employee.branch),
             DetailInfoRow(label: 'Email', value: employee.email),
             DetailInfoRow(label: 'Handphone', value: employee.phone),

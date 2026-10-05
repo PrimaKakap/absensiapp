@@ -43,7 +43,6 @@ class _EmployeeFilterPageState extends State<EmployeeFilterPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    // Ambil opsi unik secara dinamis dari daftar karyawan
     _branchOptions = widget.allEmployees
         .map((e) => e.branch)
         .where((b) => b.isNotEmpty)
@@ -124,7 +123,6 @@ class _EmployeeFilterPageState extends State<EmployeeFilterPage>
             ),
           ),
 
-          // Action Buttons di Bagian Bawah
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -186,7 +184,6 @@ class _EmployeeFilterPageState extends State<EmployeeFilterPage>
 
     return Column(
       children: [
-        // Header Jumlah Dipilih & Pilih Semua
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
@@ -223,7 +220,6 @@ class _EmployeeFilterPageState extends State<EmployeeFilterPage>
         ),
         const Divider(height: 1),
 
-        // List Opsi Checkbox
         Expanded(
           child: ListView.builder(
             itemCount: options.length,

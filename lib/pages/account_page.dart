@@ -14,7 +14,6 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  // PERBAIKAN 1: Gunakan Nullable '?' menggantikan 'late'
   Future<AccountProfile>? _profileFuture;
 
   @override
@@ -57,7 +56,7 @@ class _AccountPageState extends State<AccountPage> {
         elevation: 0,
         centerTitle: false,
       ),
-      // PERBAIKAN 2: Jika _profileFuture belum siap/null, tampilkan loading spinner
+      
       body: _profileFuture == null
           ? const Center(child: CircularProgressIndicator())
           : FutureBuilder<AccountProfile>(
@@ -136,7 +135,6 @@ class _AccountPageState extends State<AccountPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // 2. DETAILED INFORMATION SECTIONS
                       Text(
                         'Informasi Pekerjaan',
                         style: TextStyle(
@@ -189,7 +187,6 @@ class _AccountPageState extends State<AccountPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // 3. PENGATURAN AKUN SEDERHANA
                       Text(
                         'Pengaturan Akun',
                         style: TextStyle(
@@ -232,8 +229,7 @@ class _AccountPageState extends State<AccountPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // 4. TOMBOL LOGOUT
+                      
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(

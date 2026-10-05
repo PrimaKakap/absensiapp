@@ -9,6 +9,7 @@ import 'account_page.dart';
 import 'attendance_camera_page.dart';
 import '../models/attendance_model.dart';
 import '../services/api_service.dart';
+import 'inbox_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -120,7 +121,7 @@ class _MainPageState extends State<MainPage> {
       _buildHomePage(),
       const EmployeePage(),
       const Center(child: Text('Halaman Pengajuan')),
-      const Center(child: Text('Halaman Inbox')),
+      const InboxPage(),
       const AccountPage(),
     ];
 

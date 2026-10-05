@@ -38,7 +38,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
       _isLoading = false;
     });
 
-    //notif sukses
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Kata sandi berhasil diperbarui'),
       backgroundColor: Colors.green,
@@ -79,7 +78,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 24),
 
-              // 1. Input Kata Sandi Lama
               _buildPasswordField(
                 controller: _oldPasswordController,
                 label: 'Kata Sandi Saat Ini',
@@ -99,7 +97,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 16),
 
-              // 2. Input Kata Sandi Baru
               _buildPasswordField(
                 controller: _newPasswordController,
                 label: 'Kata Sandi Baru',
@@ -125,7 +122,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 16),
 
-              // 3. Konfirmasi Kata Sandi Baru
               _buildPasswordField(
                 controller: _confirmPasswordController,
                 label: 'Konfirmasi Kata Sandi Baru',
@@ -147,8 +143,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
                 },
               ),
               const SizedBox(height: 32),
-
-              // Tombol Simpan
+      
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

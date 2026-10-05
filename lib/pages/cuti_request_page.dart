@@ -73,7 +73,6 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
       _isSubmitting = true;
     });
 
-    // Simulasi pengiriman data ke Backend (2 detik)
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
@@ -117,7 +116,6 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Tipe Cuti
               const Text(
                 'Tipe Cuti',
                 style: TextStyle(
@@ -128,7 +126,7 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedCutiType,
+                initialValue: _selectedCutiType,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.cardBackground,
@@ -152,7 +150,6 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
               ),
               const SizedBox(height: 20),
 
-              // 2. Range Tanggal Cuti
               Row(
                 children: [
                   Expanded(
@@ -240,7 +237,6 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
               ),
               const SizedBox(height: 20),
 
-              // 3. Alasan Cuti
               const Text(
                 'Alasan / Keterangan',
                 style: TextStyle(
@@ -272,7 +268,6 @@ class _CutiRequestPageState extends State<CutiRequestPage> {
               ),
               const SizedBox(height: 32),
 
-              // Tombol Kirim
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

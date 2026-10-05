@@ -39,7 +39,7 @@ class AttendanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Informasi User & Tanggal
+          // Header Informasi User & Tanggal
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -89,7 +89,7 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // 2. Badge Shift
+          // Badge Shift
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.accentOrange, width: 1.5),

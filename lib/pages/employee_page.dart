@@ -37,7 +37,7 @@ class _EmployeePageState extends State<EmployeePage> {
       setState(() {
         _allEmployees = data;
 
-        // Filter Karyawan HADIR (Mengecek clockInTime != null ATAU status bukan ABSENT)
+        // Filter Karyawan HADIR
         _presentEmployees = data.where((emp) {
           final st = emp.attendanceStatus.toUpperCase().trim();
           final hasClockIn = emp.clockInTime != null;
@@ -61,7 +61,7 @@ class _EmployeePageState extends State<EmployeePage> {
     });
   }
 
-  // 1. Filter (Search + Cabang + Posisi) pada Karyawan yang Hadir
+  // Filter (Search + Cabang + Posisi)
   void _applyFilter() {
     setState(() {
       _filteredPresentEmployees = _presentEmployees.where((emp) {
@@ -82,13 +82,11 @@ class _EmployeePageState extends State<EmployeePage> {
     });
   }
 
-  // 2. Handler untuk Search Bar
   void _filterEmployees(String query) {
     _searchQuery = query;
     _applyFilter();
   }
 
-  // 3. Handler untuk Membuka Laman Filter
   Future<void> _openFilterPage() async {
     final result = await Navigator.push<FilterResult>(
       context,
@@ -177,7 +175,6 @@ class _EmployeePageState extends State<EmployeePage> {
                       );
                     }
 
-                    // Panggilan ke PresentEmployeesCard menggunakan presentList
                     return PresentEmployeesCard(
                       presentList: _filteredPresentEmployees,
                     );
