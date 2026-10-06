@@ -29,7 +29,7 @@ class ApiService {
     await prefs.setBool('isLoggedIn', true);
   }
 
-  /// Service Login Aman & Fleksibel
+/// Service Login (Simpan userId & refreshToken)
   static Future<bool> login(String email, String password) async {
     try {
       final cleanEmail = email.trim();
@@ -54,34 +54,34 @@ class ApiService {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
 
         final String token = (responseData['accessToken'] ?? responseData['token'] ?? '').toString();
-        
-        if (kDebugMode) {
-          debugPrint('===> JWT Token Berhasil Diterima: $token');
-        }
+        final String refreshToken = (responseData['refreshToken'] ?? responseData['refresh_token'] ?? '').toString();
 
         final data = responseData['data'] ?? responseData;
         final user = data['user'] ?? data;
         final employee = data['employee'] ?? user['employee'] ?? {};
-        final profile = user['employeeProfile'] ?? employee['employeeProfile'] ?? {};
+        final profile = user['employeeProfile'] ?? employee['employeeProfile'] ?? employee['profile'] ?? {};
 
+        final String userId = (user['id'] ?? data['userId'] ?? '').toString();
         final String employeeId = (employee['id'] ??
           employee['employee_id'] ??
           data['employeeId'] ??
-          data['employee_id'] ??
           user['employeeId'] ??
-          user['employee_id'] ??
-          user['id'] ??
-            '').toString();
+          '').toString();
 
         final String fullName = (profile['fullName'] ??
+            employee['companyEmail'] ??
             user['companyEmail'] ??
             'Karyawan').toString();
 
         final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userId', userId);
         await prefs.setString('employeeId', employeeId);
         await prefs.setString('fullName', fullName);
         if (token.isNotEmpty) {
           await prefs.setString('token', token);
+        }
+        if (refreshToken.isNotEmpty) {
+          await prefs.setString('refreshToken', refreshToken);
         }
         await prefs.setBool('isLoggedIn', true);
 
@@ -96,43 +96,83 @@ class ApiService {
       }
     } catch (e) {
       final errorMsg = e.toString().replaceAll('Exception: ', '');
-      if (errorMsg.contains('500')) {
-        throw Exception('Terjadi kesalahan pada server (Internal Server Error 500). Harap cek log backend NestJS.');
-      }
       throw Exception('Gagal melakukan login: $errorMsg');
     }
   }
 
-/// Method Ubah Password
-static Future<bool> changePassword({
-  required String oldPassword,
-  required String newPassword,
-}) async {
-  try {
-    final token = await getSavedToken();
-
-    final response = await http.patch(
-      Uri.parse('$baseUrl/users/change-password'), 
-      headers: {
-        'Content-Type': 'application/json',
-        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      }),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Gagal mengubah kata sandi');
-    }
-  } catch (e) {
-    throw Exception('Error: ${e.toString().replaceAll('Exception: ', '')}');
+  /// Helper Ambil User ID (Tabel Users)
+  static Future<String> getSavedUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userId') ?? '';
   }
-}
+
+  /// Helper Ambil Refresh Token
+  static Future<String?> getSavedRefreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('refreshToken');
+  }
+
+/// Method Ubah Password (Menambahkan refreshToken ke Body Payload)
+  static Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final token = await getSavedToken();
+      final refreshToken = await getSavedRefreshToken() ?? '';
+
+      var userId = await getSavedUserId();
+      var employeeId = await getSavedEmployeeId();
+
+      if (userId.isEmpty) {
+        userId = employeeId;
+      }
+
+      // Payload lengkap dengan field refreshToken wajib untuk DTO NestJS
+      final Map<String, dynamic> payload = {
+        'id': userId,
+        'userId': userId,
+        'oldPassword': oldPassword,
+        'currentPassword': oldPassword,
+        'newPassword': newPassword,
+        'confirmPassword': newPassword,
+        'refreshToken': refreshToken, // <--- Field wajib dari validasi DTO backend
+      };
+
+      final Uri url = Uri.parse('$baseUrl/users/change-password');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (refreshToken.isNotEmpty) 'x-refresh-token': refreshToken,
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (kDebugMode) {
+        debugPrint('===> Change Password Request URL: $url');
+        debugPrint('===> Change Password Request Payload: ${jsonEncode(payload)}');
+        debugPrint('===> Change Password Status: ${response.statusCode}');
+        debugPrint('===> Change Password Response: ${response.body}');
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        final msg = body['message'];
+        if (msg is List) {
+          throw Exception(msg.join('\n'));
+        }
+        throw Exception(msg ?? 'Gagal mengubah kata sandi (Status: ${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('Error: ${e.toString().replaceAll('Exception: ', '')}');
+    }
+  }
 
   /// Fetch Absensi Hari Ini untuk User Logged In (Single Object)
   static Future<AttendanceModel?> getTodayAttendance(String token) async {
@@ -220,57 +260,50 @@ static Future<bool> changePassword({
     }
   }
 
-  /// Fetch detail profil karyawan aktif
+  /// Fetch detail profil karyawan aktif dari Backend
   static Future<AccountProfile> fetchEmployeeDetail(String employeeId) async {
     try {
- String activeId = employeeId;
-    if (activeId.isEmpty) {
-      activeId = await getSavedEmployeeId();
+      String activeId = employeeId.trim();
+      if (activeId.isEmpty) {
+        activeId = await getSavedEmployeeId();
+      }
+
+      final token = await getSavedToken();
+
+      if (kDebugMode) {
+        debugPrint('===> Fetch Profile Employee ID: $activeId');
+      }
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      };
+
+      final response = await http
+          .get(Uri.parse('$baseUrl/employees/$activeId'), headers: headers)
+          .timeout(const Duration(seconds: 15));
+
+      if (kDebugMode) {
+        debugPrint('===> Fetch Profile Response Status: ${response.statusCode}');
+        debugPrint('===> Fetch Profile Response Body: ${response.body}');
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        final data = body['data'] ?? body;
+        return AccountProfile.fromJson(data);
+      } else {
+        debugPrint('Fetch profile failed with status: ${response.statusCode}');
+        throw Exception('Gagal mengambil profil dari server (${response.statusCode})');
+      }
+    } catch (e) {
+      debugPrint('Fetch profile error: $e');
+      rethrow;
     }
-
-    final token = await getSavedToken();
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-    };
-
-    final response = await http
-        .get(Uri.parse('$baseUrl/employees/$activeId'), headers: headers)
-        .timeout(const Duration(seconds: 15));
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      final data = body['data'] ?? body;
-      return AccountProfile.fromJson(data);
-    } else {
-      debugPrint('Fetch profile failed status: ${response.statusCode}');
-      return _getDummyProfileDetail();
-    }
-  } catch (e) {
-    debugPrint('Fetch profile error: $e');
-    return _getDummyProfileDetail();
-  }
-}
-
-  /// Fallback dummy profil
-  static AccountProfile _getDummyProfileDetail() {
-    return AccountProfile(
-      employeeId: 'e29bb03b-825d-41cb-a6c3-493d63b1cb00',
-      employeeNumber: 'EMP-2026-010',
-      fullName: 'John Doe',
-      companyEmail: 'johndoe@gmail.com',
-      phoneNumber: '081234567890',
-      positionName: 'UI/UX Designer',
-      departmentName: 'Application Development',
-      branchName: 'PT. BLiP Integrator Provider Denpasar',
-      companyName: 'Semua Aplikasi Indonesia',
-      nationalIdNumber: '3201234567890001',
-      residentialAddress: 'NY Street 32.',
-      employmentStatus: 'PERMANENT',
-    );
   }
 
-  /// Method Submit Absensi
+  /// Method Submit Absensi (Perbaikan Payload DTO)
   static Future<Map<String, dynamic>> submitAttendance({
     required String employeeId,
     required double latitude,
@@ -279,9 +312,6 @@ static Future<bool> changePassword({
     required String type,
   }) async {
     try {
-      final isClockIn = type == 'CLOCK_IN';
-      final nowIso = DateTime.now().toUtc().toIso8601String();
-
       final activeEmployeeId = employeeId.isNotEmpty
           ? employeeId
           : await getSavedEmployeeId();
@@ -290,20 +320,11 @@ static Future<bool> changePassword({
 
       final Map<String, dynamic> bodyPayload = {
         'employeeId': activeEmployeeId,
-        'shiftId': 'ae3a5d82-4fc2-4e94-b4ab-7e4469093be3',
-        'locationId': 'ae3a5d82-4fc2-4e94-b4ab-7e4469093be3',
+        'locationId': '23ea7463-a1d0-4338-9023-002cb213d119',
+        'latitude': latitude,
+        'longitude': longitude,
         'faceEmbedding': faceEmbedding,
         'type': type,
-        'status': 'PRESENT',
-        'latitudeIn': isClockIn ? latitude : 0.0,
-        'longitudeIn': isClockIn ? longitude : 0.0,
-        'photoInUrl': 'https://example.com/photo_in.jpg',
-        if (!isClockIn) ...{
-          'clockOutTime': nowIso,
-          'latitudeOut': latitude,
-          'longitudeOut': longitude,
-          'photoOutUrl': 'https://example.com/photo_out.jpg',
-        }
       };
 
       final response = await http

@@ -7,23 +7,24 @@ import '../models/attendance_model.dart';
 class AttendanceCard extends StatelessWidget {
   final AttendanceModel? attendanceData;
   final VoidCallback onClockInPressed;
+  final VoidCallback onClockOutPressed; // Handler khusus Clock Out
   final String userName;
 
   const AttendanceCard({
     super.key,
     this.attendanceData,
     required this.onClockInPressed,
+    required this.onClockOutPressed,
     this.userName = 'User',
   });
 
   @override
   Widget build(BuildContext context) {
-    // Tanggal real-time
     final String todayFormatted = DateFormat('EEE, d MMM yyyy', 'id_ID').format(DateTime.now());
-    // Pengecekan status absensi dari data backend
+
     final bool isClockedIn = attendanceData?.clockInTime != null;
     final bool isClockedOut = attendanceData?.clockOutTime != null;
-    // Formatting Jam Clock In & Clock Out dari Backend
+
     final String clockInTimeStr = isClockedIn
         ? DateFormat('HH.mm').format(attendanceData!.clockInTime)
         : '--.--';
@@ -39,25 +40,21 @@ class AttendanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Informasi User & Tanggal
+          // 1. Header Informasi User & Tanggal
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  // Avatar Profil
                   const CircleAvatar(
                     radius: 20,
-                    backgroundImage: NetworkImage(
-                      'https://i.pravatar.cc/150?img=12',
-                    ),
+                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
                   ),
                   const SizedBox(width: 12),
-                  // Sapaan dan Nama Pengguna
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Selamat datang,',
                         style: TextStyle(
                           color: AppColors.textSecondary,
@@ -65,10 +62,10 @@ class AttendanceCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'UserName',
+                        userName,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -76,7 +73,6 @@ class AttendanceCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // Tanggal Real-Time
               Text(
                 todayFormatted,
                 style: const TextStyle(
@@ -89,7 +85,7 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Badge Shift
+          // 2. Badge Shift
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.accentOrange, width: 1.5),
@@ -137,7 +133,7 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Tombol Clock In & Clock Out
+          // 3. Tombol Action Clock In & Clock Out
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
@@ -147,10 +143,10 @@ class AttendanceCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Action Clock In
+                // Tombol Clock In
                 Expanded(
                   child: InkWell(
-                    onTap: isClockedIn ? null : onClockInPressed, // Mati jika sudah Clock In
+                    onTap: isClockedIn ? null : onClockInPressed,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -176,16 +172,15 @@ class AttendanceCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Pemisah Vertikal
                 Container(
                   height: 24,
                   width: 1,
                   color: AppColors.accentOrange,
                 ),
-                // Action Clock Out
+                // Tombol Clock Out
                 Expanded(
                   child: InkWell(
-                    onTap: (!isClockedIn || isClockedOut) ? null : onClockInPressed, // Aktif HANYA jika sudah Clock In & belum Clock Out
+                    onTap: (isClockedIn && !isClockedOut) ? onClockOutPressed : null,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -194,7 +189,7 @@ class AttendanceCard extends StatelessWidget {
                           height: 20,
                           width: 20,
                           colorFilter: ColorFilter.mode(
-                            (!isClockedIn || isClockedOut) ? Colors.grey : AppColors.accentOrange,
+                            (isClockedIn && !isClockedOut) ? AppColors.accentOrange : Colors.grey,
                             BlendMode.srcIn,
                           ),
                         ),
@@ -204,7 +199,7 @@ class AttendanceCard extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: (!isClockedIn || isClockedOut) ? AppColors.textSecondary : AppColors.textPrimary,
+                            color: (isClockedIn && !isClockedOut) ? AppColors.textPrimary : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -216,7 +211,7 @@ class AttendanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 4. Keterangan Status Absensi Dinamis
+          // 4. Keterangan Status
           Center(
             child: Text(
               isClockedOut
@@ -225,7 +220,7 @@ class AttendanceCard extends StatelessWidget {
                       ? 'Anda telah berhasil clock in pada pukul $clockInTimeStr'
                       : 'Anda belum melakukan clock in hari ini',
               style: const TextStyle(
-                color: AppColors.iconInactive,
+                color: AppColors.textSecondary,
                 fontSize: 12,
               ),
             ),

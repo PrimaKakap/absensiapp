@@ -4,7 +4,6 @@ enum LivenessAction {
   blink,
   turnLeft,
   turnRight,
-  lookUp,
 }
 
 extension LivenessActionExt on LivenessAction {
@@ -13,7 +12,6 @@ extension LivenessActionExt on LivenessAction {
       case LivenessAction.blink:return 'Kedipkan Kedua Mata';
       case LivenessAction.turnLeft:return 'Tolehkan Wajah ke Kiri';
       case LivenessAction.turnRight:return 'Tolehkan Wajah ke Kanan';
-      case LivenessAction.lookUp:return 'Tengokkan Wajah ke Atas';
     }
   }
 }

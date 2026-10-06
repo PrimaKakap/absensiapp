@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../services/api_service.dart'; // 1. Import ApiService
 
-class ChangePasswordPage extends StatefulWidget{
+class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
+
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
 }
 
-class _ChangePasswordPageState extends State<ChangePasswordPage>{
+class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _oldPasswordController = TextEditingController();
@@ -27,23 +29,51 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
     super.dispose();
   }
 
+  // 2. Hubungkan ke ApiService.changePassword()
   Future<void> _handleChangePassword() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kata sandi berhasil diperbarui'),
-      backgroundColor: Colors.green,
-      ),
-    );
-    Navigator.pop(context);
+    try {
+      // Panggil API Backend NestJS
+      await ApiService.changePassword(
+        oldPassword: _oldPasswordController.text.trim(),
+        newPassword: _newPasswordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Tampilkan notifikasi sukses
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kata sandi berhasil diperbarui! Silakan login ulang.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context); // Kembali ke halaman Akun
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Tampilkan pesan error jika password lama salah / gagal dari backend
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: AppColors.primaryRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -58,9 +88,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
             fontWeight: FontWeight.bold,
           ),
         ),
-      backgroundColor: AppColors.cardBackground,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),    
+        backgroundColor: AppColors.cardBackground,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -78,6 +108,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 24),
 
+              // 1. Input Kata Sandi Lama
               _buildPasswordField(
                 controller: _oldPasswordController,
                 label: 'Kata Sandi Saat Ini',
@@ -97,6 +128,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 16),
 
+              // 2. Input Kata Sandi Baru
               _buildPasswordField(
                 controller: _newPasswordController,
                 label: 'Kata Sandi Baru',
@@ -122,6 +154,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
               ),
               const SizedBox(height: 16),
 
+              // 3. Konfirmasi Kata Sandi Baru
               _buildPasswordField(
                 controller: _confirmPasswordController,
                 label: 'Konfirmasi Kata Sandi Baru',
@@ -143,7 +176,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>{
                 },
               ),
               const SizedBox(height: 32),
-      
+
+              // Tombol Simpan
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

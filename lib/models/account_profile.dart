@@ -28,26 +28,26 @@ class AccountProfile {
   });
 
   factory AccountProfile.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] ?? {};
-    final profile = user['employeeProfile'] ?? {};
+    final profile = json['profile'] ?? json['employeeProfile'] ?? {};
     final position = json['position'] ?? {};
     final department = json['department'] ?? {};
     final branch = json['branch'] ?? {};
     final company = json['company'] ?? {};
+    final user = json['user'] ?? {};
 
     return AccountProfile(
-      employeeId: json['id'] ?? '',
-      employeeNumber: json['employeeNumber'] ?? '-',
-      fullName: profile['fullName'] ?? 'Nama Karyawan',
-      companyEmail: user['companyEmail'] ?? '-',
-      phoneNumber: profile['phoneNumber'] ?? '-',
-      positionName: position['positionName'] ?? 'Staff',
-      departmentName: department['departmentName'] ?? 'General',
-      branchName: branch['branchName'] ?? 'Kantor Pusat',
-      companyName: company['companyName'] ?? 'PT Semua Aplikasi Indonesia',
-      nationalIdNumber: profile['nationalIdNumber'] ?? '-',
-      residentialAddress: profile['residentialAddress'] ?? '-',
-      employmentStatus: json['employmentStatus'] ?? 'PERMANENT',
+      employeeId: (json['id'] ?? '').toString(),
+      employeeNumber: (json['employeeNumber'] ?? '-').toString(),
+      fullName: (profile['fullName'] ?? user['username'] ?? 'Karyawan').toString(),
+      companyEmail: (user['companyEmail'] ?? profile['personalEmail'] ?? '-').toString(),
+      phoneNumber: (profile['phoneNumber'] ?? '-').toString(),
+      positionName: (position['positionName'] ?? 'Staf').toString(),
+      departmentName: (department['departmentName'] ?? 'Umum').toString(),
+      branchName: (branch['branchName'] ?? '-').toString(),
+      companyName: (company['companyName'] ?? '-').toString(),
+      nationalIdNumber: (profile['nationalIdNumber'] ?? '-').toString(),
+      residentialAddress: (profile['residentialAddress'] ?? '-').toString(),
+      employmentStatus: (json['employmentStatus'] ?? 'PERMANENT').toString(),
     );
   }
 }

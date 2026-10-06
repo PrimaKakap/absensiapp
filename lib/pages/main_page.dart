@@ -1,15 +1,15 @@
-import 'package:employeepage/widgets/request_type_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'employee_page.dart';
+import 'inbox_page.dart';
 import '../widgets/custom_button_nav.dart';
 import '../widgets/attendance_card.dart';
+import '../widgets/request_type_sheet.dart';
 import '../theme/app_colors.dart';
 import 'account_page.dart';
 import 'attendance_camera_page.dart';
 import '../models/attendance_model.dart';
 import '../services/api_service.dart';
-import 'inbox_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -21,7 +21,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0; // Default di Tab 'Beranda'
 
-  // Variable menyimpan nama user & state absensi today
   String _userName = 'User';
   AttendanceModel? _todayAttendance;
   bool _isLoading = true;
@@ -33,6 +32,7 @@ class _MainPageState extends State<MainPage> {
     _fetchTodayAttendance();
   }
 
+  // 1. Load nama user dari SharedPreferences
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -40,15 +40,14 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  // 2. Fetch data absensi hari ini dari backend NestJS
   Future<void> _fetchTodayAttendance() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Ambil token tersimpan dari SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('access_token') ?? prefs.getString('token') ?? '';
+      final token = await ApiService.getSavedToken() ?? '';
 
       if (token.isNotEmpty) {
         final data = await ApiService.getTodayAttendance(token);
@@ -69,12 +68,11 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  Future<void> _handleClockIn() async {
-    final String type = _todayAttendance?.clockInTime == null ? 'CLOCK_IN' : 'CLOCK_OUT';
+  // 3. Method fleksibel untuk menangani Clock In & Clock Out
+  Future<void> _handleClock(String type) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        // Perbaikan: tambahkan parameter attendanceType yang dibutuhkan
         builder: (context) => AttendanceCameraPage(attendanceType: type),
       ),
     );
@@ -84,23 +82,22 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  // Helper tampilan untuk Halaman Beranda
+  // Layout Tampilan Halaman Beranda
   Widget _buildHomePage() {
     return Column(
       children: [
-        // Widget Header Absensi
         _isLoading
             ? const Padding(
                 padding: EdgeInsets.all(24.0),
                 child: CircularProgressIndicator(),
               )
             : AttendanceCard(
-                userName: _userName, // 2. Teruskan _userName ke AttendanceCard
+                userName: _userName,
                 attendanceData: _todayAttendance,
-                onClockInPressed: _handleClockIn,
+                onClockInPressed: () => _handleClock('CLOCK_IN'),
+                onClockOutPressed: () => _handleClock('CLOCK_OUT'),
               ),
 
-        // Area Konten Putih di bawahnya
         Expanded(
           child: Container(
             margin: const EdgeInsets.all(16),

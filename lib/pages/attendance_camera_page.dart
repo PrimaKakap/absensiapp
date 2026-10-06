@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-// import 'package:http/http.dart';
-import '../theme/app_colors.dart';
+import '../enums/liveness_challenge.dart';
+import '../services/advanced_liveness_service.dart';
 import '../services/location_service.dart';
 import '../services/ml_service.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import '../utils/camera_utils.dart';
 import '../widgets/camera_overlay_widget.dart';
 
@@ -26,16 +27,30 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
   CameraController? _cameraController;
   FaceDetector? _faceDetector;
   final MLService _mlService = MLService();
+  final AdvancedLivenessService _livenessService = AdvancedLivenessService();
+
+  // Challenge Sequence untuk Liveness
+  late ChallengeSequence _challengeSequence;
 
   Face? _detectedFace;
   bool _isProcessing = false;
   bool _isLivenessPassed = false;
-  String _statusMessage = 'Posisikan wajah anda di dalam area';
+  String _statusMessage = 'Posisikan wajah Anda di dalam area';
 
   @override
   void initState() {
     super.initState();
+    // Generate 2 tantangan acak (misal: Toleh Kiri -> Kedip Mata)
+    _challengeSequence = ChallengeSequence.generateRandom(count: 2);
+    _updateChallengeMessage();
     _initializeCameraAndML();
+  }
+
+  void _updateChallengeMessage() {
+    final current = _challengeSequence.currentAction;
+    if (current != null) {
+      _statusMessage = 'Tantangan ${_challengeSequence.currentIndex + 1}/${_challengeSequence.actions.length}: ${current.instruction}';
+    }
   }
 
   Future<void> _initializeCameraAndML() async {
@@ -44,7 +59,8 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
 
       final options = FaceDetectorOptions(
         enableClassification: true,
-        performanceMode: FaceDetectorMode.fast,
+        enableTracking: true,
+        performanceMode: FaceDetectorMode.accurate,
       );
       _faceDetector = FaceDetector(options: options);
 
@@ -95,27 +111,54 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
       if (!mounted) return;
 
       if (faces.isEmpty) {
-        setState(() => _statusMessage = 'Wajah tidak terdeteksi');
-      } else if (faces.length > 1) {
-        setState(() => _statusMessage = 'Hanya 1 wajah yang diperbolehkan!');
+        setState(() => _statusMessage = 'Posisikan wajah Anda di dalam area');
       } else {
-        final face = faces.first;
-        final leftEyeProb = face.leftEyeOpenProbability ?? 1.0;
-        final rightEyeProb = face.rightEyeOpenProbability ?? 1.0;
+        faces.sort((a, b) {
+          final areaA = a.boundingBox.width * a.boundingBox.height;
+          final areaB = b.boundingBox.width * b.boundingBox.height;
+          return areaB.compareTo(areaA); 
+        });
+        final mainFace = faces.first;
+        // Validasi batas wajah dan probabilitas mata
+        final isValidFrame = _livenessService.isFaceAndEyesValid(mainFace);
+          if (!isValidFrame) {
+          _isProcessing = false;
+          return;
+        }
 
-        if (leftEyeProb < 0.25 && rightEyeProb < 0.25) {
-          _isLivenessPassed = true;
-          _detectedFace = face;
-          setState(() => _statusMessage = 'Kedipan terdeteksi! Memproses...');
+        if (!isValidFrame) {
+          setState(() => _statusMessage = 'Wajah terlalu dekat / terpotong');
+          _isProcessing = false;
+          return;
+        }
 
-          await _cameraController!.stopImageStream();
-          _onLivenessSuccess();
-        } else {
-          setState(() => _statusMessage = 'Silakan Kedipkan Mata Anda');
+        // 2. Cek aksi tantangan saat ini
+        final currentAction = _challengeSequence.currentAction;
+        if (currentAction != null) {
+          final isActionVerified = _livenessService.verifyHeadPose(mainFace, currentAction);
+
+          if (isActionVerified) {
+            _livenessService.resetBlinkTimer();
+            _challengeSequence.next(); 
+
+            if (_challengeSequence.isCompleted) {
+              _isLivenessPassed = true;
+              _detectedFace = mainFace;
+              setState(() => _statusMessage = 'Tantangan Selesai! Memproses...');
+
+              await _cameraController!.stopImageStream();
+              _onLivenessSuccess();
+            } else {
+              // Lanjut ke tantangan berikutnya
+              setState(() => _updateChallengeMessage());
+            }
+          } else {
+            setState(() => _updateChallengeMessage());
+          }
         }
       }
     } catch (e) {
-      debugPrint('Error deteksi wajah: $e');
+      debugPrint('Error deteksi liveness: $e');
     } finally {
       _isProcessing = false;
     }
@@ -125,8 +168,8 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
     try {
       if (!mounted) return;
       await Future.delayed(const Duration(milliseconds: 300));
-      if (_cameraController == null || !_cameraController!.value.isInitialized){
-        throw Exception('kamera tidak siap');
+      if (_cameraController == null || !_cameraController!.value.isInitialized) {
+        throw Exception('Kamera tidak siap');
       }
       final XFile photo = await _cameraController!.takePicture();
       final File imageFile = File(photo.path);
@@ -179,7 +222,7 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
         ),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -190,7 +233,10 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
         );
 
         if (_cameraController != null && _cameraController!.value.isInitialized) {
+          // Reset tantangan jika gagal di tengah jalan
+          _challengeSequence = ChallengeSequence.generateRandom(count: 2);
           _isLivenessPassed = false;
+          _updateChallengeMessage();
           _cameraController!.startImageStream(_processCameraImage);
         }
       }
