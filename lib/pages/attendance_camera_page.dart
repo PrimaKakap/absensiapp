@@ -205,12 +205,14 @@ class _AttendanceCameraPageState extends State<AttendanceCameraPage> {
 
       setState(() => _statusMessage = 'Mengirim Data Absensi...');
       final savedEmployeeId = await ApiService.getSavedEmployeeId();
+
       final response = await ApiService.submitAttendance(
         employeeId: savedEmployeeId,
         latitude: position.latitude,
         longitude: position.longitude,
         faceEmbedding: faceEmbedding,
         type: widget.attendanceType,
+        imagePath: imageFile.path, 
       );
 
       if (!mounted) return;

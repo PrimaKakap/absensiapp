@@ -180,7 +180,7 @@ class AttendanceCard extends StatelessWidget {
                 // Tombol Clock Out
                 Expanded(
                   child: InkWell(
-                    onTap: (isClockedIn && !isClockedOut) ? onClockOutPressed : null,
+                    onTap: onClockOutPressed,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -189,7 +189,7 @@ class AttendanceCard extends StatelessWidget {
                           height: 20,
                           width: 20,
                           colorFilter: ColorFilter.mode(
-                            (isClockedIn && !isClockedOut) ? AppColors.accentOrange : Colors.grey,
+                            (isClockedIn && !isClockedOut) ? AppColors.accentOrange : const Color.fromARGB(255, 223, 21, 21), //JADIKAN GREY NANTI
                             BlendMode.srcIn,
                           ),
                         ),
@@ -199,7 +199,7 @@ class AttendanceCard extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: (isClockedIn && !isClockedOut) ? AppColors.textPrimary : AppColors.textSecondary,
+                            color: (isClockedIn && !isClockedOut) ? AppColors.textPrimary : AppColors.textPrimary, //JADIKAN TEKST SECONDAARY NANTI
                           ),
                         ),
                       ],

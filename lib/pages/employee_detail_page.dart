@@ -1,20 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/employee.dart';
 import '../widgets/action_button.dart';
 import '../widgets/detail_info_row.dart';
-import '../theme/app_colors.dart'; // Impor konstanta warna
+import '../theme/app_colors.dart';
 
 class EmployeeDetailPage extends StatelessWidget {
   final Employee employee;
 
   const EmployeeDetailPage({super.key, required this.employee});
 
+  // 1. Helper Panggilan Telepon
+  Future<void> _makePhoneCall(BuildContext context) async {
+    final cleanPhone = employee.phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleanPhone.isEmpty) {
+      _showSnackBar(context, 'Nomor telepon tidak tersedia');
+      return;
+    }
+
+    final Uri url = Uri.parse('tel:$cleanPhone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (context.mounted) {
+        _showSnackBar(context, 'Tidak dapat membuka aplikasi Telepon');
+      }
+    }
+  }
+
+  // 2. Helper Kirim Email
+  Future<void> _sendEmail(BuildContext context) async {
+    final email = employee.email.trim();
+    if (email.isEmpty || email == '-') {
+      _showSnackBar(context, 'Alamat email tidak tersedia');
+      return;
+    }
+
+    final Uri url = Uri.parse('mailto:$email');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (context.mounted) {
+        _showSnackBar(context, 'Tidak dapat membuka aplikasi Email');
+      }
+    }
+  }
+
+  // 3. Helper Chat WhatsApp
+  Future<void> _openWhatsApp(BuildContext context) async {
+    var phone = employee.phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phone.isEmpty) {
+      _showSnackBar(context, 'Nomor WhatsApp tidak tersedia');
+      return;
+    }
+
+    // Ubah format nomor 08xx menjadi format internasional 628xx
+    if (phone.startsWith('0')) {
+      phone = '62${phone.substring(1)}';
+    }
+
+    final Uri url = Uri.parse('https://wa.me/$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        _showSnackBar(context, 'Aplikasi WhatsApp tidak terinstall');
+      }
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.primaryRed,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cardBackground, // Latar belakang utama putih
+      backgroundColor: AppColors.cardBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.headerBackground, // Warna krem header
+        backgroundColor: AppColors.headerBackground,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -41,7 +110,7 @@ class EmployeeDetailPage extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 18, 
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
@@ -52,8 +121,8 @@ class EmployeeDetailPage extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14, 
+                    style: const TextStyle(
+                      fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -61,11 +130,23 @@ class EmployeeDetailPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ActionButton(assetName: 'phone', onTap: () {}),
+                      // Tombol Telepon
+                      ActionButton(
+                        assetName: 'phone',
+                        onTap: () => _makePhoneCall(context),
+                      ),
                       const SizedBox(width: 16),
-                      ActionButton(assetName: 'mail', onTap: () {}),
+                      // Tombol Email
+                      ActionButton(
+                        assetName: 'mail',
+                        onTap: () => _sendEmail(context),
+                      ),
                       const SizedBox(width: 16),
-                      ActionButton(assetName: 'whatsapp', onTap: () {}),
+                      // Tombol WhatsApp
+                      ActionButton(
+                        assetName: 'whatsapp',
+                        onTap: () => _openWhatsApp(context),
+                      ),
                     ],
                   ),
                 ],
